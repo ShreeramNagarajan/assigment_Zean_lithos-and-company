@@ -1,0 +1,77 @@
+ DeFi Wallet Credit Scoring using Aave V2 Transaction Data
+
+This project builds a credit scoring model for wallets interacting with the Aave V2 DeFi protocol using transaction-level data. It involves data preprocessing, feature extraction, model training, and score distribution analysis. A Streamlit UI is provided for real-time wallet scoring.
+
+
+Project Structure
+
+├── run_pipeline.py # Main script to run preprocessing, feature extraction, model training
+├── streamlit_app.py # Streamlit UI for wallet credit scoring
+├── scripts/
+│ ├── preprocessing.py # JSON loader, data cleaning, timestamp handling
+│ ├── feature_engineering.py # Wallet-level feature extraction and credit score generation
+├── models/
+│ └── GradientBoosting.pkl # Saved ML model
+├── data/
+│ └── aave_wallets.json # Input data (100K+ transaction records)
+├── output/
+│ ├── final_scores.csv # Final wallet credit scores
+│ └── score_distribution.png # Plot of score distribution
+├── README.md
+└── analysis.md
+
+
+
+ Features Engineered
+
+The following wallet-level features are extracted:
+- `total_usd`: Total USD value of transactions
+- `repay_to_borrow_ratio`: Ratio of repay to borrow transactions
+- `redeem_to_deposit_ratio`: Ratio of redeem to deposit transactions
+- `tx_per_day`: Transactions per day (wallet activity)
+- `liquidation_rate`: Proportion of liquidation events
+- `last_action_days_ago`: Days since last transaction
+
+
+
+Credit Score Formula
+
+The credit score is computed using a weighted function:
+
+```python
+features_df['credit_score'] = (
+    400
+    + 50 * np.log1p(features_df['total_usd'])
+    + 100 * features_df['repay_to_borrow_ratio']
+    + 50 * features_df['redeem_to_deposit_ratio']
+    + 20 * features_df['tx_per_day']
+    - 100 * features_df['liquidation_rate']
+    - 0.5 * features_df['last_action_days_ago']
+).clip(0, 1000)
+The score is clipped between 0 and 1000 to match typical credit scoring systems.
+
+ Model Training
+Models used: Gradient Boosting, Random Forest, Decision Tree
+
+Evaluation Metrics: MSE and R² on test set
+
+Best model: Gradient Boosting (R² ≈ 0.9987, MSE ≈ 193)
+
+ How to Run
+1. Install dependencies
+
+pip install -r requirements.txt
+2. Run pipeline
+
+python run_pipeline.py
+This generates final_scores.csv and trains the model.
+
+3. Launch Streamlit App
+
+streamlit run streamlit_app.py
+Output Example
+Final credit score ranges from 0 to 1000
+
+Distribution is analyzed in analysis.md
+
+Top scoring wallets can be prioritized for lending or reputation systems
